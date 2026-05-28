@@ -32,7 +32,8 @@ def client() -> firestore.Client:
     global _client
     if _client is None:
         project = os.environ.get("GCP_PROJECT_ID")
-        _client = firestore.Client(project=project) if project else firestore.Client()
+        database = os.environ.get("FIRESTORE_DATABASE", "(default)")
+        _client = firestore.Client(project=project, database=database)
     return _client
 
 
@@ -40,12 +41,13 @@ def session_ref(sid: str) -> firestore.DocumentReference:
     return client().collection("sessions").document(sid)
 
 
-def create_session(meet_url: str, display_name: str) -> str:
+def create_session(meet_url: str, display_name: str, agenda: str = "") -> str:
     sid = uuid.uuid4().hex[:12]
     session_ref(sid).set(
         {
             "meet_url": meet_url,
             "display_name": display_name,
+            "agenda": agenda,
             "status": "active",
             "shared_context": {},
             "research_data": {},
@@ -180,3 +182,19 @@ def set_research_cache(sid: str, topic_hash: str, payload: dict[str, Any]) -> No
 
 def topic_hash(topic: str) -> str:
     return hashlib.sha256(topic.strip().lower().encode()).hexdigest()[:16]
+
+
+def get_last_event_timestamp(sid: str, event_type: str) -> float | None:
+    """Return the epoch timestamp of the most recent event of a given type, or None."""
+    docs = list(
+        session_ref(sid)
+        .collection("events")
+        .where("type", "==", event_type)
+        .order_by("timestamp", direction=firestore.Query.DESCENDING)
+        .limit(1)
+        .stream()
+    )
+    if not docs:
+        return None
+    ts = (docs[0].to_dict() or {}).get("timestamp")
+    return ts.timestamp() if ts and hasattr(ts, "timestamp") else None

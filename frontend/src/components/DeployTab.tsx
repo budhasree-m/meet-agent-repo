@@ -4,6 +4,7 @@ import { deploy } from "../api";
 export function DeployTab({ onDeployed }: { onDeployed: (sid: string) => void }) {
   const [meetUrl, setMeetUrl] = useState("");
   const [name, setName] = useState("AI Assistant");
+  const [agenda, setAgenda] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,7 +13,7 @@ export function DeployTab({ onDeployed }: { onDeployed: (sid: string) => void })
     setBusy(true);
     setError(null);
     try {
-      const resp = await deploy(meetUrl.trim(), name.trim() || "AI Assistant");
+      const resp = await deploy(meetUrl.trim(), name.trim() || "AI Assistant", agenda.trim());
       onDeployed(resp.session_id);
     } catch (err) {
       const msg =
@@ -44,7 +45,15 @@ export function DeployTab({ onDeployed }: { onDeployed: (sid: string) => void })
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <label className="block text-sm font-medium text-slate-700 mb-1">Stream agenda <span className="text-slate-400 font-normal">(optional)</span></label>
+        <textarea
+          rows={3}
+          placeholder="e.g. Playing Minecraft survival mode, building a castle. Later doing a Q&A."
+          value={agenda}
+          onChange={(e) => setAgenda(e.target.value)}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-sm"
         />
         {error && (
           <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 px-3 py-2 text-sm">
@@ -67,10 +76,12 @@ export function DeployTab({ onDeployed }: { onDeployed: (sid: string) => void })
       <aside className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
         <h3 className="text-base font-semibold mb-3">Agents on duty</h3>
         <ul className="space-y-3 text-sm">
-          <Agent name="Context" emoji="🔍" desc="Watches the screen via Vision AI, distils a topic" />
-          <Agent name="Research" emoji="🔎" desc="Google-searches the topic, summarises one fact" />
-          <Agent name="Hype" emoji="🎉" desc="Drops a short chat line + reaction" />
-          <Agent name="Moderator" emoji="⚠️" desc="Warns on emoji-spam in chat" />
+          <Agent name="Hype" emoji="🎉" desc="Celebrates milestones and keeps energy high" />
+          <Agent name="Expert Commentator" emoji="🎯" desc="Drops game tips and strategy insights" />
+          <Agent name="Chat Moderator" emoji="⚠️" desc="Handles emoji spam and toxic messages" />
+          <Agent name="Controversy Detector" emoji="🛡️" desc="Flags risky content and redirects diplomatically" />
+          <Agent name="Engagement Optimizer" emoji="📈" desc="Prompts interaction when chat goes quiet" />
+          <Agent name="Brand Safety" emoji="⚖️" desc="Detects copyright and brand risk on screen" />
         </ul>
         <h3 className="text-base font-semibold mt-6 mb-3">What to demo</h3>
         <ol className="list-decimal pl-5 space-y-1.5 text-sm text-slate-600">
